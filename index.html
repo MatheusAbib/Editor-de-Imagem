@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor de Imagem</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image" sizes="16x16" href="imagem.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+
+
+</head>
+<body>
+  <div class="container">
+  <h1>Editor de Imagem</h1>
+  <p class="subtitle">Crie fotos perfeitas com cantos suaves</p>
+
+  <div class="upload-area" id="uploadArea">
+    <div class="upload-icon">📷</div>
+    <div class="upload-text">Arraste sua imagem aqui ou clique para subir</div>
+    <div class="upload-hint">JPG, PNG até 10MB</div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*">
+
+  <div class="editor" id="editor">
+    <div class="canvas-container">
+      <canvas id="canvas" width="300" height="300"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="presets">
+        <button class="preset-btn" onclick="setShape(0)">Círculo</button>
+        <button class="preset-btn active" onclick="setShape(20)">Arredondado</button>
+        <button class="preset-btn" onclick="setShape(40)">Médio</button>
+        <button class="preset-btn" onclick="setShape(60)">Sem ponta</button>
+        <button class="preset-btn" onclick="setShape(100)">Quadrado</button>
+      </div>
+
+      
+<div class="control-group">
+  <label>Brilho</label>
+  <div class="slider-row">
+    <input type="range" id="brightnessSlider" min="0" max="200" value="100">
+    <span class="value" id="brightnessValue">100%</span>
+  </div>
+</div>
+
+<div class="control-group">
+  <label>Contraste</label>
+  <div class="slider-row">
+    <input type="range" id="contrastSlider" min="0" max="200" value="100">
+    <span class="value" id="contrastValue">100%</span>
+  </div>
+</div>
+
+<div class="control-group">
+  <label>Saturação</label>
+  <div class="slider-row">
+    <input type="range" id="saturationSlider" min="0" max="200" value="100">
+    <span class="value" id="saturationValue">100%</span>
+  </div>
+</div>
+
+<div class="d-flex align-items-center gap-2">
+  <!-- Botão de Rotação -->
+  <button id="rotateBtn" class="btn btn-primary d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-repeat"></i>
+  </button>
+
+  <!-- Botão Preto e Branco -->
+  <button id="bwBtn" class="btn btn-secondary d-flex align-items-center justify-content-center" title="Preto e Branco">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="7" fill="white" stroke="black" stroke-width="2"/>
+      <path d="M1 8a7 7 0 0 1 14 0" fill="black"/>
+    </svg>
+  </button>
+</div>
+
+
+
+
+
+      <div class="control-group">
+        <label>Suavidade no Canto</label>
+        <div class="slider-row">
+          <input type="range" id="shapeSlider" min="0" max="100" step="1" value="20">
+          <span class="value" id="shapeValue">Soft</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Zoom</label>
+        <div class="slider-row">
+          <input type="range" id="zoomSlider" min="0.5" max="3" step="0.1" value="1">
+          <span class="value" id="zoomValue">1.0×</span>
+        </div>
+      </div>
+
+      <div class="size-options">
+        <button class="size-btn active" onclick="setSize(512)">512×512</button>
+        <button class="size-btn" onclick="setSize(256)">256×256</button>
+        <button class="size-btn" onclick="setSize(128)">128×128</button>
+        <button class="size-btn" onclick="setSize(64)">64×64</button>
+      </div>
+    </div>
+
+ <div class="actions">
+  <button class="btn btn-secondary" onclick="resetImage()">
+<i class="bi bi-image"></i> Nova Imagem
+  </button>
+  <button class="btn btn-primary" onclick="downloadImage()">
+    <i class="bi bi-download"></i> Download
+  </button>
+</div>
+
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2025 Editor de Imagem</p>
+  <p>Designed by <a href="https://matheus-portifolio.onrender.com" target="_blank" rel="noopener noreferrer" class="footer-link">Matheus Abib</a></p>
+</footer>
+
+
+
+<script src="main.js"></script>
+</body>
+</html>
