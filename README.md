@@ -4,17 +4,17 @@ Este projeto é um editor de imagens baseado em HTML5 Canvas. Ele permite ao usu
 
 ## ✨ Funcionalidades
 
-- ✅ Upload de imagem com visualização
-- ✅ Máscara com formato *squircle*
-- ✅ Zoom e movimentação da imagem
-- ✅ Rotação
-- ✅ Filtros:
+- Upload de imagem com visualização
+- Máscara com formato *squircle*
+- Zoom e movimentação da imagem
+- Rotação
+- Filtros:
   - Preto e branco
   - Brilho
   - Contraste
   - Saturação
-- ✅ Redimensionamento da exportação
-- ✅ Exportação para PNG
+- Redimensionamento da exportação
+- Exportação para PNG
 
 ## 📸 Interface
 
