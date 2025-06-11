@@ -479,26 +479,32 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 footer {
-            position: fixed;
-            bottom: 40px !important;
-            width: 100%;
-            padding: 20px;
-            font-size: 0.9rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 20px;
+    font-size: 0.9rem;
+   
+    z-index: 10; /* para garantir que fique acima do fundo */
+}
 
-        }
+footer a {
+    text-decoration: none;
+    margin: 0 5px;
+    color: black;
+}
 
-          footer a {
-            text-decoration: none;
-            margin: 0 5px;
-                  color: black;
+footer a:hover {
+    background-color: #bbb;
+}
 
-        }
+footer p {
+    margin: 5px 0;
+    color: black;
+}
 
-        footer a a:hover{
-            background-color: #bbb;
-        }
-
-        footer p {
-      margin: 5px 0;
-      color: black;
+/* Exemplo para o container principal, evitando que o footer sobreponha conteúdo */
+main, .editor, .actions {
+    position: relative;
+    z-index: 20; /* deixar acima do footer */
 }

@@ -156,7 +156,10 @@ function createSquirclePath(ctx, cx, cy, size, n) {
 }
 
 function draw() {
-  if (!img) return;
+  if (!img) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
 
   ctx.clearRect(0, 0, 300, 300);
   ctx.save();
@@ -185,26 +188,56 @@ function draw() {
   ctx.stroke();
 }
 
-canvas.addEventListener('mousedown', (e) => {
+// --- Drag & Touch Support ---
+
+function getPointerPosition(evt) {
+  const rect = canvas.getBoundingClientRect();
+  if (evt.touches) {
+    return {
+      x: evt.touches[0].clientX - rect.left,
+      y: evt.touches[0].clientY - rect.top
+    };
+  } else {
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+  }
+}
+
+function startDrag(evt) {
+  evt.preventDefault();
+  if (!img) return;
   isDragging = true;
-  const rect = canvas.getBoundingClientRect();
-  startX = e.clientX - rect.left - offsetX;
-  startY = e.clientY - rect.top - offsetY;
+  const pos = getPointerPosition(evt);
+  startX = pos.x - offsetX;
+  startY = pos.y - offsetY;
   canvas.style.cursor = 'grabbing';
-});
+}
 
-document.addEventListener('mousemove', (e) => {
+function duringDrag(evt) {
   if (!isDragging) return;
-  const rect = canvas.getBoundingClientRect();
-  offsetX = e.clientX - rect.left - startX;
-  offsetY = e.clientY - rect.top - startY;
+  evt.preventDefault();
+  const pos = getPointerPosition(evt);
+  offsetX = pos.x - startX;
+  offsetY = pos.y - startY;
   draw();
-});
+}
 
-document.addEventListener('mouseup', () => {
+function endDrag(evt) {
+  if (!isDragging) return;
+  evt.preventDefault();
   isDragging = false;
   canvas.style.cursor = 'move';
-});
+}
+
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('touchstart', startDrag, {passive: false});
+document.addEventListener('mousemove', duringDrag);
+document.addEventListener('touchmove', duringDrag, {passive: false});
+document.addEventListener('mouseup', endDrag);
+document.addEventListener('touchend', endDrag);
+document.addEventListener('touchcancel', endDrag);
 
 shapeSlider.addEventListener('input', () => {
   const val = parseFloat(shapeSlider.value);
@@ -220,6 +253,7 @@ shapeSlider.addEventListener('input', () => {
 });
 
 zoomSlider.addEventListener('input', () => {
+  if (!img) return;
   const newZoom = parseFloat(zoomSlider.value);
   const zoomDiff = newZoom / zoom;
   zoom = newZoom;
@@ -234,7 +268,8 @@ rotateBtn.addEventListener('click', () => {
   draw();
 });
 
-function setShape(sliderVal) {
+// Corrigindo setShape para receber evento e manipular classe
+function setShape(sliderVal, target) {
   shapeSlider.value = sliderVal;
   const val = parseFloat(sliderVal);
   if (val === 0) shapeValue.textContent = 'Circle';
@@ -245,14 +280,15 @@ function setShape(sliderVal) {
   else shapeValue.textContent = val;
 
   document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  if(target) target.classList.add('active');
   draw();
 }
 
-function setSize(size) {
+// Corrigindo setSize para receber evento e manipular classe
+function setSize(size, target) {
   outputSize = size;
   document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  if(target) target.classList.add('active');
 }
 
 function resetImage() {
@@ -261,11 +297,15 @@ function resetImage() {
   editor.style.display = 'none';
   fileInput.value = '';
   img = null;
+  draw();
 }
 
 function downloadImage() {
-  if (!img) return;
-  
+  if (!img) {
+    alert("Nenhuma imagem carregada para download!");
+    return;
+  }
+
   const outputCanvas = document.createElement('canvas');
   outputCanvas.width = outputSize;
   outputCanvas.height = outputSize;
@@ -304,8 +344,10 @@ function downloadImage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `squircle-avatar-${outputSize}x${outputSize}.png`;
+    a.download = `squircle-avatar-${outputSize}.png`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
 }
