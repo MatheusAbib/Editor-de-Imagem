@@ -11,14 +11,13 @@ body {
                 hsla(159, 71%, 85%, 0.44) 0%,
                 hsla(159, 72%, 75%, 0.416) 100%,
                 rgb(191, 239, 223));
-  min-height: 100vh;
-  padding: 20px;
+  padding: 1.5%;
 }
 
 html {
   background: url('https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2076&q=80%22') center/cover no-repeat; 
-  min-height: 100vh;
   background-blend-mode: multiply;
+
 }
 
 .container {
@@ -39,9 +38,27 @@ h1 {
 .subtitle {
   text-align: center;
   color: #666;
-  margin-bottom: 25px;
   font-size: clamp(14px, 2.5vw, 16px);
+  margin-bottom: 1.6%;
 }
+
+#designed{
+    margin-bottom: 2%;
+  font-size: clamp(14px, 2.5vw, 70%);
+}
+
+#designed a {
+  color: #666;
+  text-decoration: none;
+
+}
+
+#designed a:hover {
+  color: #2b2a2a;
+  text-decoration:underline;
+
+}
+
 
 .upload-area {
   border: 2px dashed #ccc;
@@ -91,7 +108,7 @@ input[type="file"] {
 .canvas-container {
   position: relative;
   width: 100%;
-  max-width: 390px;
+  max-width: 470px;
   height: auto;
   aspect-ratio: 1/1;
   margin: 0 auto 25px;
@@ -464,6 +481,8 @@ input[type="range"]::-webkit-slider-thumb {
   color: white;
   border-color: #000;
 }
+
+
 
 
 #bwBtn {

@@ -117,7 +117,7 @@ function resetPosition() {
   zoomValue.textContent = '1.0×';
 
   shapeSlider.value = 20;
-  shapeValue.textContent = 'Soft';
+  shapeValue.textContent = 'Círculo';
 
   brightness = 100;
   contrast = 100;
@@ -134,9 +134,6 @@ function resetPosition() {
   const scale = Math.max(300 / img.width, 300 / img.height) * zoom;
   offsetX = (300 - img.width * scale) / 2;
   offsetY = (300 - img.height * scale) / 2;
-
-  isBW = false;
-  bwBtn.classList.remove("active");
 }
 
 function createSquirclePath(ctx, cx, cy, size, n) {
@@ -159,10 +156,7 @@ function createSquirclePath(ctx, cx, cy, size, n) {
 }
 
 function draw() {
-  if (!img) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    return;
-  }
+  if (!img) return;
 
   ctx.clearRect(0, 0, 300, 300);
   ctx.save();
@@ -176,13 +170,18 @@ function draw() {
   ctx.rotate(rotation * Math.PI / 180);
   ctx.translate(-150, -150);
 
-  // Monta o filtro CSS do canvas (brilho, contraste, saturação e grayscale)
   let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   if (isBW) filters += " grayscale(100%)";
   ctx.filter = filters;
 
   const scale = Math.max(300 / img.width, 300 / img.height) * zoom;
-  ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+const drawWidth = img.width * scale;
+const drawHeight = img.height * scale;
+
+const centerX = 150 - drawWidth / 2 + offsetX;
+const centerY = 150 - drawHeight / 2 + offsetY;
+
+ctx.drawImage(img, centerX, centerY, drawWidth, drawHeight);
 
   ctx.restore();
 
@@ -192,64 +191,34 @@ function draw() {
   ctx.stroke();
 }
 
-// --- Drag & Touch Support ---
-
-function getPointerPosition(evt) {
-  const rect = canvas.getBoundingClientRect();
-  if (evt.touches) {
-    return {
-      x: evt.touches[0].clientX - rect.left,
-      y: evt.touches[0].clientY - rect.top
-    };
-  } else {
-    return {
-      x: evt.clientX - rect.left,
-      y: evt.clientY - rect.top
-    };
-  }
-}
-
-function startDrag(evt) {
-  evt.preventDefault();
-  if (!img) return;
+canvas.addEventListener('mousedown', (e) => {
   isDragging = true;
-  const pos = getPointerPosition(evt);
-  startX = pos.x - offsetX;
-  startY = pos.y - offsetY;
+  const rect = canvas.getBoundingClientRect();
+  startX = e.clientX - rect.left - offsetX;
+  startY = e.clientY - rect.top - offsetY;
   canvas.style.cursor = 'grabbing';
-}
+});
 
-function duringDrag(evt) {
+document.addEventListener('mousemove', (e) => {
   if (!isDragging) return;
-  evt.preventDefault();
-  const pos = getPointerPosition(evt);
-  offsetX = pos.x - startX;
-  offsetY = pos.y - startY;
+  const rect = canvas.getBoundingClientRect();
+  offsetX = e.clientX - rect.left - startX;
+  offsetY = e.clientY - rect.top - startY;
   draw();
-}
+});
 
-function endDrag(evt) {
-  if (!isDragging) return;
-  evt.preventDefault();
+document.addEventListener('mouseup', () => {
   isDragging = false;
   canvas.style.cursor = 'move';
-}
-
-canvas.addEventListener('mousedown', startDrag);
-canvas.addEventListener('touchstart', startDrag, {passive: false});
-document.addEventListener('mousemove', duringDrag);
-document.addEventListener('touchmove', duringDrag, {passive: false});
-document.addEventListener('mouseup', endDrag);
-document.addEventListener('touchend', endDrag);
-document.addEventListener('touchcancel', endDrag);
+});
 
 shapeSlider.addEventListener('input', () => {
   const val = parseFloat(shapeSlider.value);
-  if (val === 0) shapeValue.textContent = 'Circle';
-  else if (val < 30) shapeValue.textContent = 'Soft';
-  else if (val < 50) shapeValue.textContent = 'Medium';
-  else if (val < 80) shapeValue.textContent = 'Hard';
-  else if (val >= 100) shapeValue.textContent = 'Square';
+  if (val === 0) shapeValue.textContent = 'Círculo';
+  else if (val < 30) shapeValue.textContent = 'Arredondado';
+  else if (val < 50) shapeValue.textContent = 'Médio';
+  else if (val < 80) shapeValue.textContent = 'Sem Ponta';
+  else if (val <= 100) shapeValue.textContent = 'Quadrado';
   else shapeValue.textContent = val;
 
   document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
@@ -257,61 +226,94 @@ shapeSlider.addEventListener('input', () => {
 });
 
 zoomSlider.addEventListener('input', () => {
-  if (!img) return;
   const newZoom = parseFloat(zoomSlider.value);
   const zoomDiff = newZoom / zoom;
   zoom = newZoom;
   zoomValue.textContent = zoom.toFixed(1) + '×';
-
-  // Ajusta o offset para manter o centro da imagem
-  const centerX = 150;
-  const centerY = 150;
-  offsetX = centerX - (centerX - offsetX) * zoomDiff;
-  offsetY = centerY - (centerY - offsetY) * zoomDiff;
-
+  offsetX = 150 + (offsetX - 150) * zoomDiff;
+  offsetY = 150 + (offsetY - 150) * zoomDiff;
   draw();
 });
 
 rotateBtn.addEventListener('click', () => {
-  if (!img) return;
   rotation = (rotation + 90) % 360;
   draw();
 });
 
-// Exporta a imagem final em PNG no tamanho definido
-document.getElementById('exportBtn').addEventListener('click', () => {
+function setShape(sliderVal) {
+  shapeSlider.value = sliderVal;
+  const val = parseFloat(sliderVal);
+  if (val === 0) shapeValue.textContent = 'Círculo';
+  else if (val < 30) shapeValue.textContent = 'Arredondado';
+  else if (val < 50) shapeValue.textContent = 'Médio';
+  else if (val < 80) shapeValue.textContent = 'Sem Ponta';
+  else if (val <= 100) shapeValue.textContent = 'Quadrado';
+  else shapeValue.textContent = val;
+
+  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  draw();
+}
+
+function setSize(size) {
+  outputSize = size;
+  document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function resetImage() {
+  localStorage.removeItem('savedAvatarImage');
+  uploadArea.style.display = 'block';
+  editor.style.display = 'none';
+  fileInput.value = '';
+  img = null;
+}
+
+function downloadImage() {
   if (!img) return;
 
-  const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = outputSize;
-  exportCanvas.height = outputSize;
-  const exportCtx = exportCanvas.getContext('2d');
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = outputSize;
+  outputCanvas.height = outputSize;
+  const outputCtx = outputCanvas.getContext('2d');
 
-  // Aplica o mesmo formato de recorte squircle
-  exportCtx.save();
+  const scaleFactor = outputSize / 300;
+
+  outputCtx.clearRect(0, 0, outputSize, outputSize);
+  outputCtx.save();
 
   const sliderVal = parseFloat(shapeSlider.value);
   const n = sliderToN(sliderVal);
-  createSquirclePath(exportCtx, outputSize/2, outputSize/2, outputSize, n);
-  exportCtx.clip();
+  createSquirclePath(outputCtx, outputSize / 2, outputSize / 2, outputSize, n);
+  outputCtx.clip();
 
-  exportCtx.translate(outputSize / 2, outputSize / 2);
-  exportCtx.rotate(rotation * Math.PI / 180);
-  exportCtx.translate(-outputSize / 2, -outputSize / 2);
+  outputCtx.translate(outputSize / 2, outputSize / 2);
+  outputCtx.rotate(rotation * Math.PI / 180);
+  outputCtx.translate(-outputSize / 2, -outputSize / 2);
 
-  // Aplica filtros
   let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   if (isBW) filters += " grayscale(100%)";
-  exportCtx.filter = filters;
+  outputCtx.filter = filters;
 
-  const scale = Math.max(outputSize / img.width, outputSize / img.height) * zoom;
-  exportCtx.drawImage(img, offsetX * (outputSize / 300), offsetY * (outputSize / 300), img.width * scale, img.height * scale);
+  // Aplica o mesmo cálculo de posição e escala que o draw() usa
+  const baseScale = Math.max(300 / img.width, 300 / img.height);
+  const finalScale = baseScale * zoom * scaleFactor;
+  const drawWidth = img.width * finalScale;
+  const drawHeight = img.height * finalScale;
 
-  exportCtx.restore();
+  const centerX = outputSize / 2 - drawWidth / 2 + offsetX * scaleFactor;
+  const centerY = outputSize / 2 - drawHeight / 2 + offsetY * scaleFactor;
 
-  const dataUrl = exportCanvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = 'avatar.png';
-  a.click();
-});
+  outputCtx.drawImage(img, centerX, centerY, drawWidth, drawHeight);
+
+  outputCtx.restore();
+
+  outputCanvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `squircle-avatar-${outputSize}x${outputSize}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}

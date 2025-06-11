@@ -17,6 +17,7 @@
   <div class="container">
   <h1>Editor de Imagem</h1>
   <p class="subtitle">Crie fotos perfeitas com cantos suaves</p>
+   <p class="subtitle" id="designed">&copy; 2025 Designed by <a href="https://matheus-portifolio.onrender.com/">Matheus Abib</a></p>
 
   <div class="upload-area" id="uploadArea">
     <div class="upload-icon">📷</div>
@@ -36,7 +37,7 @@
         <button class="preset-btn" onclick="setShape(0)">Círculo</button>
         <button class="preset-btn active" onclick="setShape(20)">Arredondado</button>
         <button class="preset-btn" onclick="setShape(40)">Médio</button>
-        <button class="preset-btn" onclick="setShape(60)">Sem ponta</button>
+        <button class="preset-btn" onclick="setShape(60)">Sem Ponta</button>
         <button class="preset-btn" onclick="setShape(100)">Quadrado</button>
       </div>
 
@@ -65,7 +66,7 @@
   </div>
 </div>
 
-<div class="d-flex align-items-center gap-2">
+<div id="buttons" class="d-flex align-items-center justify-content-center gap-2">
   <!-- Botão de Rotação -->
   <button id="rotateBtn" class="btn btn-primary d-flex align-items-center justify-content-center">
     <i class="bi bi-arrow-repeat"></i>
@@ -81,14 +82,11 @@
 </div>
 
 
-
-
-
       <div class="control-group">
         <label>Suavidade no Canto</label>
         <div class="slider-row">
           <input type="range" id="shapeSlider" min="0" max="100" step="1" value="20">
-          <span class="value" id="shapeValue">Soft</span>
+          <span class="value" id="shapeValue">Arredondado</span>
         </div>
       </div>
 
