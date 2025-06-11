@@ -134,6 +134,9 @@ function resetPosition() {
   const scale = Math.max(300 / img.width, 300 / img.height) * zoom;
   offsetX = (300 - img.width * scale) / 2;
   offsetY = (300 - img.height * scale) / 2;
+
+  isBW = false;
+  bwBtn.classList.remove("active");
 }
 
 function createSquirclePath(ctx, cx, cy, size, n) {
@@ -173,6 +176,7 @@ function draw() {
   ctx.rotate(rotation * Math.PI / 180);
   ctx.translate(-150, -150);
 
+  // Monta o filtro CSS do canvas (brilho, contraste, saturação e grayscale)
   let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   if (isBW) filters += " grayscale(100%)";
   ctx.filter = filters;
@@ -258,96 +262,56 @@ zoomSlider.addEventListener('input', () => {
   const zoomDiff = newZoom / zoom;
   zoom = newZoom;
   zoomValue.textContent = zoom.toFixed(1) + '×';
-  offsetX = 150 + (offsetX - 150) * zoomDiff;
-  offsetY = 150 + (offsetY - 150) * zoomDiff;
+
+  // Ajusta o offset para manter o centro da imagem
+  const centerX = 150;
+  const centerY = 150;
+  offsetX = centerX - (centerX - offsetX) * zoomDiff;
+  offsetY = centerY - (centerY - offsetY) * zoomDiff;
+
   draw();
 });
 
 rotateBtn.addEventListener('click', () => {
+  if (!img) return;
   rotation = (rotation + 90) % 360;
   draw();
 });
 
-// Corrigindo setShape para receber evento e manipular classe
-function setShape(sliderVal, target) {
-  shapeSlider.value = sliderVal;
-  const val = parseFloat(sliderVal);
-  if (val === 0) shapeValue.textContent = 'Circle';
-  else if (val < 30) shapeValue.textContent = 'Soft';
-  else if (val < 50) shapeValue.textContent = 'Medium';
-  else if (val < 80) shapeValue.textContent = 'Hard';
-  else if (val >= 100) shapeValue.textContent = 'Square';
-  else shapeValue.textContent = val;
+// Exporta a imagem final em PNG no tamanho definido
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if (!img) return;
 
-  document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-  if(target) target.classList.add('active');
-  draw();
-}
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = outputSize;
+  exportCanvas.height = outputSize;
+  const exportCtx = exportCanvas.getContext('2d');
 
-// Corrigindo setSize para receber evento e manipular classe
-function setSize(size, target) {
-  outputSize = size;
-  document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-  if(target) target.classList.add('active');
-}
-
-function resetImage() {
-  localStorage.removeItem('savedAvatarImage');
-  uploadArea.style.display = 'block';
-  editor.style.display = 'none';
-  fileInput.value = '';
-  img = null;
-  draw();
-}
-
-function downloadImage() {
-  if (!img) {
-    alert("Nenhuma imagem carregada para download!");
-    return;
-  }
-
-  const outputCanvas = document.createElement('canvas');
-  outputCanvas.width = outputSize;
-  outputCanvas.height = outputSize;
-  const outputCtx = outputCanvas.getContext('2d');
-
-  const scaleFactor = outputSize / 300;
-
-  outputCtx.clearRect(0, 0, outputSize, outputSize);
-  outputCtx.save();
+  // Aplica o mesmo formato de recorte squircle
+  exportCtx.save();
 
   const sliderVal = parseFloat(shapeSlider.value);
   const n = sliderToN(sliderVal);
-  createSquirclePath(outputCtx, outputSize / 2, outputSize / 2, outputSize, n);
-  outputCtx.clip();
+  createSquirclePath(exportCtx, outputSize/2, outputSize/2, outputSize, n);
+  exportCtx.clip();
 
-  outputCtx.translate(outputSize / 2, outputSize / 2);
-  outputCtx.rotate(rotation * Math.PI / 180);
-  outputCtx.translate(-outputSize / 2, -outputSize / 2);
+  exportCtx.translate(outputSize / 2, outputSize / 2);
+  exportCtx.rotate(rotation * Math.PI / 180);
+  exportCtx.translate(-outputSize / 2, -outputSize / 2);
 
+  // Aplica filtros
   let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
   if (isBW) filters += " grayscale(100%)";
-  outputCtx.filter = filters;
+  exportCtx.filter = filters;
 
-  const scale = Math.max(300 / img.width, 300 / img.height) * zoom * scaleFactor;
-  outputCtx.drawImage(
-    img,
-    offsetX * scaleFactor,
-    offsetY * scaleFactor,
-    img.width * scale,
-    img.height * scale
-  );
+  const scale = Math.max(outputSize / img.width, outputSize / img.height) * zoom;
+  exportCtx.drawImage(img, offsetX * (outputSize / 300), offsetY * (outputSize / 300), img.width * scale, img.height * scale);
 
-  outputCtx.restore();
+  exportCtx.restore();
 
-  outputCanvas.toBlob((blob) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `squircle-avatar-${outputSize}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
-}
+  const dataUrl = exportCanvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'avatar.png';
+  a.click();
+});
