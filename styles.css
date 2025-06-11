@@ -12,14 +12,13 @@ body {
                 hsla(159, 72%, 75%, 0.416) 100%,
                 rgb(191, 239, 223));
   min-height: 120vh;
-  padding: 1.5%;
+  padding: 20px;
 }
 
 html {
   background: url('https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2076&q=80%22') center/cover no-repeat; 
   min-height: 120vh;
   background-blend-mode: multiply;
-
 }
 
 .container {
@@ -46,7 +45,7 @@ h1 {
 
 #designed{
     margin-bottom: 2%;
-  font-size: clamp(14px, 2.5vw, 70%);
+  font-size: clamp(14px, 2.5vw, 10%);
 }
 
 #designed a {
