@@ -1,125 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editor de Imagem</title>
-
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image" sizes="16x16" href="imagem.png">
+  <title>PixelCraft - Editor de Imagem Avançado</title>
+  <link rel="icon" type="image/png" href="imagem.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
-
-
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main>
-  <div class="container">
-  <h1>Editor de Imagem</h1>
-  <p class="subtitle">Crie fotos perfeitas com cantos suaves</p>
-   <p class="subtitle" id="designed">&copy; 2025 Designed by <a href="https://matheus-abib-portifolio.up.railway.app/" target="_blank">Matheus Abib</a></p>
-
-  <div class="upload-area" id="uploadArea">
-    <div class="upload-icon">📷</div>
-    <div class="upload-text">Arraste sua imagem aqui ou clique para subir</div>
-    <div class="upload-hint">JPG, PNG até 10MB</div>
-  </div>
-
-  <input type="file" id="fileInput" accept="image/*">
-
-  <div class="editor" id="editor">
-    <div class="canvas-container">
-      <canvas id="canvas" width="300" height="300"></canvas>
+  <div class="glass-container">
+    <div class="header">
+      <h1>PixelCraft Editor</h1>
+      <p>Transforme suas imagens com estilo e precisão</p>
+      <p class="author">Desenvolvido por <a href="https://matheus-abib-portifolio.up.railway.app/" target="_blank">Matheus Abib</a></p>
     </div>
 
-    <div class="controls">
-      <div class="presets">
-        <button class="preset-btn" onclick="setShape(0)">Círculo</button>
-        <button class="preset-btn active" onclick="setShape(20)">Arredondado</button>
-        <button class="preset-btn" onclick="setShape(40)">Médio</button>
-        <button class="preset-btn" onclick="setShape(60)">Sem Ponta</button>
-        <button class="preset-btn" onclick="setShape(100)">Quadrado</button>
+    <div class="upload-area" id="uploadArea">
+      <div class="upload-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+      <div class="upload-text">Arraste e solte sua imagem aqui</div>
+      <div class="upload-hint">ou clique para selecionar (JPG, PNG até 10MB)</div>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*">
+
+    <div class="editor" id="editor">
+      <div class="canvas-container">
+        <canvas id="canvas" width="500" height="500"></canvas>
       </div>
 
-      
-<div class="control-group">
-  <label>Brilho</label>
-  <div class="slider-row">
-    <input type="range" id="brightnessSlider" min="0" max="200" value="100">
-    <span class="value" id="brightnessValue">100%</span>
-  </div>
-</div>
+      <div class="controls">
+        <div class="presets">
+          <button class="preset-btn" onclick="setShape(0)">Círculo</button>
+          <button class="preset-btn active" onclick="setShape(20)">Arredondado</button>
+          <button class="preset-btn" onclick="setShape(40)">Médio</button>
+          <button class="preset-btn" onclick="setShape(60)">Suave</button>
+          <button class="preset-btn" onclick="setShape(100)">Quadrado</button>
+        </div>
 
-<div class="control-group">
-  <label>Contraste</label>
-  <div class="slider-row">
-    <input type="range" id="contrastSlider" min="0" max="200" value="100">
-    <span class="value" id="contrastValue">100%</span>
-  </div>
-</div>
+        <div class="effect-buttons">
+          <button class="effect-btn" id="rotateBtn" data-tooltip="Rotacionar 90°">
+            <i class="bi bi-arrow-repeat"></i>
+          </button>
+          <button class="effect-btn" id="bwBtn" data-tooltip="Preto e Branco">
+            <i class="bi bi-circle-half"></i>
+          </button>
+          <button class="effect-btn" id="mirrorBtn" data-tooltip="Espelhar">
+            <i class="bi bi-symmetry-vertical"></i>
+          </button>
+          <button class="effect-btn" id="invertBtn" data-tooltip="Inverter Cores">
+            <i class="bi bi-contrast"></i>
+          </button>
+        </div>
 
-<div class="control-group">
-  <label>Saturação</label>
-  <div class="slider-row">
-    <input type="range" id="saturationSlider" min="0" max="200" value="100">
-    <span class="value" id="saturationValue">100%</span>
-  </div>
-</div>
+        <div class="control-group">
+          <label for="brightnessSlider">Brilho</label>
+          <div class="slider-row">
+            <input type="range" id="brightnessSlider" min="0" max="200" value="100">
+            <span class="value" id="brightnessValue">100%</span>
+          </div>
+        </div>
 
-<div id="buttons" class="d-flex align-items-center justify-content-center gap-2">
-  <!-- Botão de Rotação -->
-  <button id="rotateBtn" class="btn btn-primary d-flex align-items-center justify-content-center">
-    <i class="bi bi-arrow-repeat"></i>
-  </button>
+        <div class="control-group">
+          <label for="contrastSlider">Contraste</label>
+          <div class="slider-row">
+            <input type="range" id="contrastSlider" min="0" max="200" value="100">
+            <span class="value" id="contrastValue">100%</span>
+          </div>
+        </div>
 
-  <!-- Botão Preto e Branco -->
-  <button id="bwBtn" class="btn btn-secondary d-flex align-items-center justify-content-center" title="Preto e Branco">
-    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 16 16">
-      <circle cx="8" cy="8" r="7" fill="white" stroke="black" stroke-width="2"/>
-      <path d="M1 8a7 7 0 0 1 14 0" fill="black"/>
-    </svg>
-  </button>
-</div>
+        <div class="control-group">
+          <label for="saturationSlider">Saturação</label>
+          <div class="slider-row">
+            <input type="range" id="saturationSlider" min="0" max="200" value="100">
+            <span class="value" id="saturationValue">100%</span>
+          </div>
+        </div>
 
+        <div class="control-group">
+          <label for="shapeSlider">Suavidade dos Cantos</label>
+          <div class="slider-row">
+            <input type="range" id="shapeSlider" min="0" max="100" step="1" value="20">
+            <span class="value" id="shapeValue">Arredondado</span>
+          </div>
+        </div>
 
-      <div class="control-group">
-        <label>Suavidade no Canto</label>
-        <div class="slider-row">
-          <input type="range" id="shapeSlider" min="0" max="100" step="1" value="20">
-          <span class="value" id="shapeValue">Arredondado</span>
+        <div class="control-group">
+          <label for="zoomSlider">Zoom</label>
+          <div class="slider-row">
+            <input type="range" id="zoomSlider" min="0.5" max="3" step="0.1" value="1">
+            <span class="value" id="zoomValue">1.0×</span>
+          </div>
+        </div>
+
+        <div class="size-options">
+          <button class="size-btn active" onclick="setSize(512)">512×512</button>
+          <button class="size-btn" onclick="setSize(256)">256×256</button>
+          <button class="size-btn" onclick="setSize(128)">128×128</button>
+          <button class="size-btn" onclick="setSize(64)">64×64</button>
         </div>
       </div>
 
-      <div class="control-group">
-        <label>Zoom</label>
-        <div class="slider-row">
-          <input type="range" id="zoomSlider" min="0.5" max="3" step="0.1" value="1">
-          <span class="value" id="zoomValue">1.0×</span>
-        </div>
-      </div>
-
-      <div class="size-options">
-        <button class="size-btn active" onclick="setSize(512)">512×512</button>
-        <button class="size-btn" onclick="setSize(256)">256×256</button>
-        <button class="size-btn" onclick="setSize(128)">128×128</button>
-        <button class="size-btn" onclick="setSize(64)">64×64</button>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="resetImage()">
+          <i class="bi bi-arrow-counterclockwise"></i> Reiniciar
+        </button>
+        <button class="btn btn-primary" onclick="downloadImage()">
+          <i class="bi bi-download"></i> Baixar Imagem
+        </button>
       </div>
     </div>
-
-<div class="actions">
-  <button class="btn btn-secondary" onclick="resetImage()">
-    <i class="bi bi-image"></i> Nova Imagem
-  </button>
-  <button class="btn btn-primary" onclick="downloadImage()">
-    <i class="bi bi-download"></i> Download
-  </button>
-</div>
-
-
   </div>
-</div>
 
-</main>
 <script src="main.js"></script>
 </body>
 </html>
