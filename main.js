@@ -1,370 +1,713 @@
-  const uploadArea = document.getElementById('uploadArea');
-  const fileInput = document.getElementById('fileInput');
-  const editor = document.getElementById('editor');
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const editor = document.getElementById('editor');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-  // Elementos de controle
-  const shapeSlider = document.getElementById('shapeSlider');
-  const zoomSlider = document.getElementById('zoomSlider');
-  const shapeValue = document.getElementById('shapeValue');
-  const zoomValue = document.getElementById('zoomValue');
-  const brightnessSlider = document.getElementById('brightnessSlider');
-  const brightnessValue = document.getElementById('brightnessValue');
-  const contrastSlider = document.getElementById('contrastSlider');
-  const contrastValue = document.getElementById('contrastValue');
-  const saturationSlider = document.getElementById('saturationSlider');
-  const saturationValue = document.getElementById('saturationValue');
-  const rotateBtn = document.getElementById('rotateBtn');
-  const bwBtn = document.getElementById('bwBtn');
-  const mirrorBtn = document.getElementById('mirrorBtn');
-  const invertBtn = document.getElementById('invertBtn');
+    // Elementos de controle
+    const shapeSlider = document.getElementById('shapeSlider');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const shapeValue = document.getElementById('shapeValue');
+    const zoomValue = document.getElementById('zoomValue');
+    const brightnessSlider = document.getElementById('brightnessSlider');
+    const brightnessValue = document.getElementById('brightnessValue');
+    const contrastSlider = document.getElementById('contrastSlider');
+    const contrastValue = document.getElementById('contrastValue');
+    const saturationSlider = document.getElementById('saturationSlider');
+    const saturationValue = document.getElementById('saturationValue');
+    const rotateBtn = document.getElementById('rotateBtn');
+    const bwBtn = document.getElementById('bwBtn');
+    const mirrorBtn = document.getElementById('mirrorBtn');
+    const invertBtn = document.getElementById('invertBtn');
 
-  // Variáveis de estado
-  let isBW = false;
-  let isMirrored = false;
-  let isInverted = false;
-  let img = null;
-  let offsetX = 0;
-  let offsetY = 0;
-  let zoom = 1;
-  let isDragging = false;
-  let startX, startY;
-  let outputSize = 512;
-  let brightness = 100;
-  let contrast = 100;
-  let saturation = 100;
-  let rotation = 0;
+    // Variáveis de estado
+    let isBW = false;
+    let isMirrored = false;
+    let isInverted = false;
+    let img = null;
+    let offsetX = 0;
+    let offsetY = 0;
+    let zoom = 1;
+    let isDragging = false;
+    let startX, startY;
+    let outputSize = 512;
+    let brightness = 100;
+    let contrast = 100;
+    let saturation = 100;
+    let rotation = 0;
+    let blur = 0;
+    let sharpen = 0;
+    let activeFilter = 'normal';
 
-  // Event listeners para os controles
-  brightnessSlider.addEventListener("input", () => {
-    brightness = brightnessSlider.value;
-    brightnessValue.textContent = brightness + '%';
-    draw();
-  });
 
-  contrastSlider.addEventListener("input", () => {
-    contrast = contrastSlider.value;
-    contrastValue.textContent = contrast + '%';
-    draw();
-  });
-
-  saturationSlider.addEventListener("input", () => {
-    saturation = saturationSlider.value;
-    saturationValue.textContent = saturation + '%';
-    draw();
-  });
-
-  bwBtn.addEventListener("click", () => {
-    isBW = !isBW;
-    bwBtn.classList.toggle("active");
-    draw();
-  });
-
-  mirrorBtn.addEventListener("click", () => {
-    isMirrored = !isMirrored;
-    mirrorBtn.classList.toggle("active");
-    draw();
-  });
-
-  invertBtn.addEventListener("click", () => {
-    isInverted = !isInverted;
-    invertBtn.classList.toggle("active");
-    draw();
-  });
-
-  // Carregar imagem salva se existir
-  document.addEventListener('DOMContentLoaded', function() {
-    const savedImage = localStorage.getItem('savedAvatarImage');
-    if (savedImage) {
-      loadImageFromData(savedImage);
-    }
-  });
-
-  // Função para converter valor do slider para curvatura
-  function sliderToN(sliderValue) {
-    if (sliderValue >= 99) return Infinity;
-    return 2 + Math.pow(sliderValue / 100, 2) * 50;
-  }
-
-  // Eventos de upload
-  uploadArea.addEventListener('click', () => fileInput.click());
-
-  uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.classList.add('drag-over');
-  });
-
-  uploadArea.addEventListener('dragleave', () => {
-    uploadArea.classList.remove('drag-over');
-  });
-
-  uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      loadImage(file);
-    }
-  });
-
-  fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) loadImage(file);
-  });
-
-  // Carregar imagem
-  function loadImage(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      localStorage.setItem('savedAvatarImage', e.target.result);
-      loadImageFromData(e.target.result);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function loadImageFromData(imageData) {
-    img = new Image();
-    img.onload = () => {
-      uploadArea.style.display = 'none';
-      editor.style.display = 'block';
-      resetPosition();
+    // Event listeners para os controles
+    brightnessSlider.addEventListener("input", () => {
+      brightness = brightnessSlider.value;
+      brightnessValue.textContent = brightness + '%';
       draw();
-    };
-    img.src = imageData;
-  }
+    });
 
-  // Resetar posição e configurações
-  function resetPosition() {
-    zoom = 1;
-    zoomSlider.value = 1;
-    zoomValue.textContent = '1.0×';
+    contrastSlider.addEventListener("input", () => {
+      contrast = contrastSlider.value;
+      contrastValue.textContent = contrast + '%';
+      draw();
+    });
 
-    shapeSlider.value = 20;
-    shapeValue.textContent = 'Arredondado';
+    saturationSlider.addEventListener("input", () => {
+      saturation = saturationSlider.value;
+      saturationValue.textContent = saturation + '%';
+      draw();
+    });
 
-    brightness = 100;
-    contrast = 100;
-    saturation = 100;
-    rotation = 0;
-    isBW = false;
-    isMirrored = false;
-    isInverted = false;
+    bwBtn.addEventListener("click", () => {
+      isBW = !isBW;
+      bwBtn.classList.toggle("active");
+      draw();
+    });
 
-    brightnessSlider.value = 100;
-    contrastSlider.value = 100;
-    saturationSlider.value = 100;
-    brightnessValue.textContent = '100%';
-    contrastValue.textContent = '100%';
-    saturationValue.textContent = '100%';
+    mirrorBtn.addEventListener("click", () => {
+      isMirrored = !isMirrored;
+      mirrorBtn.classList.toggle("active");
+      draw();
+    });
 
-    bwBtn.classList.remove("active");
-    mirrorBtn.classList.remove("active");
-    invertBtn.classList.remove("active");
+    invertBtn.addEventListener("click", () => {
+      isInverted = !isInverted;
+      invertBtn.classList.toggle("active");
+      draw();
+    });
 
-    const scale = Math.max(500 / img.width, 500 / img.height) * zoom;
-    offsetX = (500 - img.width * scale) / 2;
-    offsetY = (500 - img.height * scale) / 2;
-  }
-
-  // Criar caminho para formas arredondadas
-  function createSquirclePath(ctx, cx, cy, size, n) {
-    ctx.beginPath();
-    if (n === Infinity) {
-      const half = size / 2;
-      ctx.rect(cx - half, cy - half, size, size);
-    } else {
-      for (let t = 0; t <= Math.PI * 2; t += 0.02) {
-        const cos = Math.cos(t);
-        const sin = Math.sin(t);
-        const r = size / 2 / Math.pow(Math.pow(Math.abs(cos), n) + Math.pow(Math.abs(sin), n), 1/n);
-        const x = cx + r * cos;
-        const y = cy + r * sin;
-        if (t === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+    // Carregar imagem salva se existir
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedImage = localStorage.getItem('savedAvatarImage');
+      if (savedImage) {
+        loadImageFromData(savedImage);
       }
+    });
+
+
+    const blurSlider = document.getElementById('blurSlider');
+    const blurValue = document.getElementById('blurValue');
+    const sharpenSlider = document.getElementById('sharpenSlider');
+    const sharpenValue = document.getElementById('sharpenValue');
+
+    blurSlider.addEventListener("input", () => {
+      blur = parseFloat(blurSlider.value);
+      blurValue.textContent = blur + 'px';
+      draw();
+    });
+
+    sharpenSlider.addEventListener("input", () => {
+      sharpen = parseInt(sharpenSlider.value);
+      sharpenValue.textContent = sharpen;
+      draw();
+    });
+
+    // Função para converter valor do slider para curvatura
+    function sliderToN(sliderValue) {
+      if (sliderValue >= 99) return Infinity;
+      return 2 + Math.pow(sliderValue / 100, 2) * 50;
     }
-    ctx.closePath();
-  }
 
-  // Desenhar imagem no canvas
-  function draw() {
-    if (!img) return;
+    // Eventos de upload
+    uploadArea.addEventListener('click', () => fileInput.click());
 
-    ctx.clearRect(0, 0, 500, 500);
-    ctx.save();
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
 
-    // Aplicar forma
-    const sliderVal = parseFloat(shapeSlider.value);
-    const n = sliderToN(sliderVal);
-    createSquirclePath(ctx, 250, 250, 500, n);
-    ctx.clip();
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('drag-over');
+    });
 
-    // Aplicar transformações
-    ctx.translate(250, 250);
-    if (isMirrored) {
-      ctx.scale(-1, 1);
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        loadImage(file);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) loadImage(file);
+    });
+
+    // Carregar imagem
+    function loadImage(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        localStorage.setItem('savedAvatarImage', e.target.result);
+        loadImageFromData(e.target.result);
+      };
+      reader.readAsDataURL(file);
     }
-    ctx.rotate(rotation * Math.PI / 180);
-    ctx.translate(-250, -250);
 
-    // Aplicar filtros
-    let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-    if (isBW) filters += " grayscale(100%)";
-    if (isInverted) filters += " invert(100%)";
-    ctx.filter = filters;
+    function loadImageFromData(imageData) {
+      img = new Image();
+      img.onload = () => {
+        uploadArea.style.display = 'none';
+        editor.style.display = 'block';
+        resetPosition();
+        draw();
+      };
+      img.src = imageData;
+    }
 
-    // Calcular escala e posição
-    const scale = Math.max(500 / img.width, 500 / img.height) * zoom;
-    const drawWidth = img.width * scale;
-    const drawHeight = img.height * scale;
+   // Resetar posição e configurações
+function resetPosition() {
+  zoom = 1;
+  zoomSlider.value = 1;
+  zoomValue.textContent = '1.0×';
 
-    const centerX = 250 - drawWidth / 2 + offsetX;
-    const centerY = 250 - drawHeight / 2 + offsetY;
+  shapeSlider.value = 20;
+  shapeValue.textContent = 'Arredondado';
 
-    // Desenhar imagem
-    ctx.drawImage(img, centerX, centerY, drawWidth, drawHeight);
+  // Resetar para filtro normal
+  activeFilter = 'normal';
+  const normalFilter = filterPresets.normal;
+  
+  brightness = normalFilter.brightness;
+  contrast = normalFilter.contrast;
+  saturation = normalFilter.saturation;
+  blur = normalFilter.blur;
+  sharpen = normalFilter.sharpen;
+  isBW = normalFilter.isBW;
+  isInverted = normalFilter.isInverted;
+  
+  rotation = 0;
+  isMirrored = false;
 
-    ctx.restore();
-
-    // Borda decorativa
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-    ctx.lineWidth = 2;
-    createSquirclePath(ctx, 250, 250, 500, n);
-    ctx.stroke();
+  // Atualizar controles
+  brightnessSlider.value = brightness;
+  contrastSlider.value = contrast;
+  saturationSlider.value = saturation;
+  blurSlider.value = blur;
+  sharpenSlider.value = sharpen;
+  
+  brightnessValue.textContent = brightness + '%';
+  contrastValue.textContent = contrast + '%';
+  saturationValue.textContent = saturation + '%';
+  blurValue.textContent = blur + 'px';
+  sharpenValue.textContent = sharpen;
+  
+  // Atualizar botões
+  bwBtn.classList.remove("active");
+  mirrorBtn.classList.remove("active");
+  invertBtn.classList.remove("active");
+  
+  // Atualizar botões de filtro
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  // Ativar botão "Original"
+  const originalBtn = document.querySelector('.filter-btn[onclick*="normal"]');
+  if (originalBtn) {
+    originalBtn.classList.add('active');
   }
 
-  // Eventos de arrastar imagem
-  canvas.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    const rect = canvas.getBoundingClientRect();
-    startX = e.clientX - rect.left - offsetX;
-    startY = e.clientY - rect.top - offsetY;
-    canvas.style.cursor = 'grabbing';
+  const scale = Math.max(500 / img.width, 500 / img.height) * zoom;
+  offsetX = (500 - img.width * scale) / 2;
+  offsetY = (500 - img.height * scale) / 2;
+}
+
+
+// Filtros Predefinidos (Instagram-style)
+const filterPresets = {
+  normal: {
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    blur: 0,
+    sharpen: 0,
+    isBW: false,
+    isInverted: false
+  },
+  vintage: {
+    brightness: 95,
+    contrast: 110,
+    saturation: 85,
+    blur: 0.5,
+    sharpen: 0,
+    isBW: false,
+    isInverted: false,
+    extra: 'sepia(0.3)'
+  },
+  grayscale: {
+    brightness: 100,
+    contrast: 110,
+    saturation: 0,
+    blur: 0,
+    sharpen: 10,
+    isBW: true,
+    isInverted: false
+  },
+  sepia: {
+    brightness: 100,
+    contrast: 105,
+    saturation: 80,
+    blur: 0,
+    sharpen: 5,
+    isBW: false,
+    isInverted: false,
+    extra: 'sepia(0.7)'
+  },
+  vivid: {
+    brightness: 105,
+    contrast: 120,
+    saturation: 150,
+    blur: 0,
+    sharpen: 15,
+    isBW: false,
+    isInverted: false
+  },
+  cool: {
+    brightness: 100,
+    contrast: 110,
+    saturation: 90,
+    blur: 0,
+    sharpen: 0,
+    isBW: false,
+    isInverted: false,
+    extra: 'hue-rotate(180deg)'
+  },
+  warm: {
+    brightness: 105,
+    contrast: 115,
+    saturation: 120,
+    blur: 0,
+    sharpen: 0,
+    isBW: false,
+    isInverted: false,
+    extra: 'hue-rotate(-20deg)'
+  },
+  dramatic: {
+    brightness: 90,
+    contrast: 150,
+    saturation: 80,
+    blur: 0,
+    sharpen: 20,
+    isBW: false,
+    isInverted: false
+  }
+};
+
+// Aplicar filtro predefinido
+function applyFilter(filterName) {
+  if (!img || !filterPresets[filterName]) return;
+  
+  const filter = filterPresets[filterName];
+  
+  // Aplicar valores
+  brightness = filter.brightness;
+  contrast = filter.contrast;
+  saturation = filter.saturation;
+  blur = filter.blur;
+  sharpen = filter.sharpen;
+  isBW = filter.isBW;
+  isInverted = filter.isInverted;
+  
+  // Atualizar controles
+  brightnessSlider.value = brightness;
+  contrastSlider.value = contrast;
+  saturationSlider.value = saturation;
+  blurSlider.value = blur;
+  sharpenSlider.value = sharpen;
+  
+  brightnessValue.textContent = brightness + '%';
+  contrastValue.textContent = contrast + '%';
+  saturationValue.textContent = saturation + '%';
+  blurValue.textContent = blur + 'px';
+  sharpenValue.textContent = sharpen;
+  
+  // Atualizar botões de toggle
+  bwBtn.classList.toggle("active", isBW);
+  invertBtn.classList.toggle("active", isInverted);
+  
+  // Atualizar botão ativo dos filtros
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
   });
+  event.target.classList.add('active');
+  
+  activeFilter = filterName;
+  
+  // Redesenhar
+  draw();
+}
 
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const rect = canvas.getBoundingClientRect();
-    offsetX = e.clientX - rect.left - startX;
-    offsetY = e.clientY - rect.top - startY;
-    draw();
-  });
+// Salvar configurações atuais como filtro personalizado
+function saveCustomFilter(name) {
+  filterPresets[name] = {
+    brightness: brightness,
+    contrast: contrast,
+    saturation: saturation,
+    blur: blur,
+    sharpen: sharpen,
+    isBW: isBW,
+    isInverted: isInverted
+  };
+  
+  // Adicionar botão de filtro personalizado
+  const filtersContainer = document.querySelector('.filters-container');
+  if (filtersContainer) {
+    const newFilterBtn = document.createElement('button');
+    newFilterBtn.className = 'filter-btn';
+    newFilterBtn.onclick = () => applyFilter(name);
+    newFilterBtn.innerHTML = `
+      <div class="filter-preview" style="background: linear-gradient(135deg, var(--correios-blue), var(--creative-purple));"></div>
+      <span>${name}</span>
+    `;
+    filtersContainer.appendChild(newFilterBtn);
+  }
+}
 
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-    canvas.style.cursor = 'move';
-  });
+    // Criar caminho para formas arredondadas
+    function createSquirclePath(ctx, cx, cy, size, n) {
+      ctx.beginPath();
+      if (n === Infinity) {
+        const half = size / 2;
+        ctx.rect(cx - half, cy - half, size, size);
+      } else {
+        for (let t = 0; t <= Math.PI * 2; t += 0.02) {
+          const cos = Math.cos(t);
+          const sin = Math.sin(t);
+          const r = size / 2 / Math.pow(Math.pow(Math.abs(cos), n) + Math.pow(Math.abs(sin), n), 1/n);
+          const x = cx + r * cos;
+          const y = cy + r * sin;
+          if (t === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+      }
+      ctx.closePath();
+    }
 
-  // Eventos dos sliders
-  shapeSlider.addEventListener('input', () => {
-    const val = parseFloat(shapeSlider.value);
-    if (val === 0) shapeValue.textContent = 'Círculo';
-    else if (val < 30) shapeValue.textContent = 'Arredondado';
-    else if (val < 50) shapeValue.textContent = 'Médio';
-    else if (val < 80) shapeValue.textContent = 'Suave';
-    else if (val <= 100) shapeValue.textContent = 'Quadrado';
-    else shapeValue.textContent = val;
+// Desenhar imagem no canvas
+function draw() {
+  if (!img) return;
 
-    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-    draw();
-  });
+  ctx.clearRect(0, 0, 500, 500);
+  ctx.save();
 
-  zoomSlider.addEventListener('input', () => {
-    const newZoom = parseFloat(zoomSlider.value);
-    const zoomDiff = newZoom / zoom;
-    zoom = newZoom;
-    zoomValue.textContent = zoom.toFixed(1) + '×';
-    offsetX = 250 + (offsetX - 250) * zoomDiff;
-    offsetY = 250 + (offsetY - 250) * zoomDiff;
-    draw();
-  });
+  // Aplicar forma
+  const sliderVal = parseFloat(shapeSlider.value);
+  const n = sliderToN(sliderVal);
+  createSquirclePath(ctx, 250, 250, 500, n);
+  ctx.clip();
 
-  // Botão de rotação
-  rotateBtn.addEventListener('click', () => {
-    rotation = (rotation + 90) % 360;
-    draw();
-  });
+  // Aplicar transformações
+  ctx.translate(250, 250);
+  if (isMirrored) {
+    ctx.scale(-1, 1);
+  }
+  ctx.rotate(rotation * Math.PI / 180);
+  ctx.translate(-250, -250);
 
-  // Funções auxiliares
-  function setShape(sliderVal) {
-    shapeSlider.value = sliderVal;
-    const val = parseFloat(sliderVal);
-    if (val === 0) shapeValue.textContent = 'Círculo';
-    else if (val < 30) shapeValue.textContent = 'Arredondado';
-    else if (val < 50) shapeValue.textContent = 'Médio';
-    else if (val < 80) shapeValue.textContent = 'Suave';
-    else if (val <= 100) shapeValue.textContent = 'Quadrado';
-    else shapeValue.textContent = val;
+  // Aplicar filtros
+  let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+  
+  // Adicionar blur se > 0
+  if (blur > 0) {
+    filters += ` blur(${blur}px)`;
+  }
+  
+  // Adicionar efeitos de toggle
+  if (isBW) filters += " grayscale(100%)";
+  if (isInverted) filters += " invert(100%)";
+  
+  // Adicionar filtro extra se existir
+  if (filterPresets[activeFilter] && filterPresets[activeFilter].extra) {
+    filters += " " + filterPresets[activeFilter].extra;
+  }
+  
+  ctx.filter = filters;
 
-    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    draw();
+  // Calcular escala e posição
+  const scale = Math.max(500 / img.width, 500 / img.height) * zoom;
+  const drawWidth = img.width * scale;
+  const drawHeight = img.height * scale;
+
+  const centerX = 250 - drawWidth / 2 + offsetX;
+  const centerY = 250 - drawHeight / 2 + offsetY;
+
+  // Desenhar imagem
+  ctx.drawImage(img, centerX, centerY, drawWidth, drawHeight);
+  
+  // Aplicar nitidez APÓS desenhar (usando convolução)
+  if (sharpen > 0) {
+    applySharpenEffect(sharpen);
   }
 
-  function setSize(size) {
-    outputSize = size;
-    document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-  }
+  ctx.restore();
 
-  function resetImage() {
-    localStorage.removeItem('savedAvatarImage');
-    uploadArea.style.display = 'block';
-    editor.style.display = 'none';
-    fileInput.value = '';
-    img = null;
+  // Borda decorativa
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+  ctx.lineWidth = 2;
+  createSquirclePath(ctx, 250, 250, 500, n);
+  ctx.stroke();
+}
+
+// Função para aplicar efeito de nitidez (sharpen)
+function applySharpenEffect(intensity) {
+  // Obter dados da imagem
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  // Criar cópia dos dados originais
+  const originalData = new Uint8ClampedArray(data);
+  
+  // Kernel de nitidez (laplaciano modificado)
+  const kernel = [
+    [-1, -1, -1],
+    [-1,  9, -1],
+    [-1, -1, -1]
+  ];
+  
+  // Ajustar intensidade
+  const factor = intensity / 100;
+  
+  // Aplicar convolução
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      let r = 0, g = 0, b = 0;
+      
+      // Aplicar kernel 3x3
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          const pixelIndex = ((y + ky) * width + (x + kx)) * 4;
+          const kernelValue = kernel[ky + 1][kx + 1];
+          
+          r += originalData[pixelIndex] * kernelValue;
+          g += originalData[pixelIndex + 1] * kernelValue;
+          b += originalData[pixelIndex + 2] * kernelValue;
+        }
+      }
+      
+      const pixelIndex = (y * width + x) * 4;
+      
+      // Misturar original com resultado do kernel
+      data[pixelIndex] = clamp(
+        originalData[pixelIndex] * (1 - factor) + r * factor
+      );
+      data[pixelIndex + 1] = clamp(
+        originalData[pixelIndex + 1] * (1 - factor) + g * factor
+      );
+      data[pixelIndex + 2] = clamp(
+        originalData[pixelIndex + 2] * (1 - factor) + b * factor
+      );
+    }
   }
+  
+  // Colocar os dados processados de volta no canvas
+  ctx.putImageData(imageData, 0, 0);
+}
+
+// Função auxiliar para limitar valores entre 0-255
+function clamp(value) {
+  return Math.max(0, Math.min(255, value));
+}
+
+
+
+    // Eventos de arrastar imagem
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      const rect = canvas.getBoundingClientRect();
+      startX = e.clientX - rect.left - offsetX;
+      startY = e.clientY - rect.top - offsetY;
+      canvas.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const rect = canvas.getBoundingClientRect();
+      offsetX = e.clientX - rect.left - startX;
+      offsetY = e.clientY - rect.top - startY;
+      draw();
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      canvas.style.cursor = 'move';
+    });
+
+    // Eventos dos sliders
+    shapeSlider.addEventListener('input', () => {
+      const val = parseFloat(shapeSlider.value);
+      if (val === 0) shapeValue.textContent = 'Círculo';
+      else if (val < 30) shapeValue.textContent = 'Arredondado';
+      else if (val < 50) shapeValue.textContent = 'Médio';
+      else if (val < 80) shapeValue.textContent = 'Suave';
+      else if (val <= 100) shapeValue.textContent = 'Quadrado';
+      else shapeValue.textContent = val;
+
+      document.querySelectorAll('.preset-btn-premium').forEach(btn => btn.classList.remove('active'));
+      draw();
+    });
+
+    zoomSlider.addEventListener('input', () => {
+      const newZoom = parseFloat(zoomSlider.value);
+      const zoomDiff = newZoom / zoom;
+      zoom = newZoom;
+      zoomValue.textContent = zoom.toFixed(1) + '×';
+      offsetX = 250 + (offsetX - 250) * zoomDiff;
+      offsetY = 250 + (offsetY - 250) * zoomDiff;
+      draw();
+    });
+
+    // Botão de rotação
+    rotateBtn.addEventListener('click', () => {
+      rotation = (rotation + 90) % 360;
+      draw();
+    });
+
+    // Funções auxiliares
+    function setShape(sliderVal) {
+      shapeSlider.value = sliderVal;
+      const val = parseFloat(sliderVal);
+      if (val === 0) shapeValue.textContent = 'Círculo';
+      else if (val < 30) shapeValue.textContent = 'Arredondado';
+      else if (val < 50) shapeValue.textContent = 'Médio';
+      else if (val < 80) shapeValue.textContent = 'Suave';
+      else if (val <= 100) shapeValue.textContent = 'Quadrado';
+      else shapeValue.textContent = val;
+
+      document.querySelectorAll('.preset-btn-premium').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      draw();
+    }
+
+    function setSize(size) {
+      outputSize = size;
+      document.querySelectorAll('.size-btn-premium').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function resetImage() {
+      localStorage.removeItem('savedAvatarImage');
+      uploadArea.style.display = 'block';
+      editor.style.display = 'none';
+      fileInput.value = '';
+      img = null;
+    }
 
   // Download da imagem
-  function downloadImage() {
-    if (!img) return;
+function downloadImage() {
+  if (!img) return;
 
-    const outputCanvas = document.createElement('canvas');
-    outputCanvas.width = outputSize;
-    outputCanvas.height = outputSize;
-    const outputCtx = outputCanvas.getContext('2d');
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = outputSize;
+  outputCanvas.height = outputSize;
+  const outputCtx = outputCanvas.getContext('2d');
 
-    const scaleFactor = outputSize / 500;
+  const scaleFactor = outputSize / 500;
 
-    outputCtx.clearRect(0, 0, outputSize, outputSize);
-    outputCtx.save();
+  outputCtx.clearRect(0, 0, outputSize, outputSize);
+  outputCtx.save();
 
-    const sliderVal = parseFloat(shapeSlider.value);
-    const n = sliderToN(sliderVal);
-    createSquirclePath(outputCtx, outputSize / 2, outputSize / 2, outputSize, n);
-    outputCtx.clip();
+  const sliderVal = parseFloat(shapeSlider.value);
+  const n = sliderToN(sliderVal);
+  createSquirclePath(outputCtx, outputSize / 2, outputSize / 2, outputSize, n);
+  outputCtx.clip();
 
-    outputCtx.translate(outputSize / 2, outputSize / 2);
-    if (isMirrored) {
-      outputCtx.scale(-1, 1);
-    }
-    outputCtx.rotate(rotation * Math.PI / 180);
-    outputCtx.translate(-outputSize / 2, -outputSize / 2);
-
-    let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-    if (isBW) filters += " grayscale(100%)";
-    if (isInverted) filters += " invert(100%)";
-    outputCtx.filter = filters;
-
-    const baseScale = Math.max(500 / img.width, 500 / img.height);
-    const finalScale = baseScale * zoom * scaleFactor;
-    const drawWidth = img.width * finalScale;
-    const drawHeight = img.height * finalScale;
-
-    const centerX = outputSize / 2 - drawWidth / 2 + offsetX * scaleFactor;
-    const centerY = outputSize / 2 - drawHeight / 2 + offsetY * scaleFactor;
-
-    outputCtx.drawImage(img, centerX, centerY, drawWidth, drawHeight);
-
-    outputCtx.restore();
-
-    outputCanvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `pixelcraft-${outputSize}x${outputSize}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png', 0.95);
+  outputCtx.translate(outputSize / 2, outputSize / 2);
+  if (isMirrored) {
+    outputCtx.scale(-1, 1);
   }
+  outputCtx.rotate(rotation * Math.PI / 180);
+  outputCtx.translate(-outputSize / 2, -outputSize / 2);
+
+  let filters = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+  
+  // Adicionar blur se > 0
+  if (blur > 0) {
+    filters += ` blur(${blur}px)`;
+  }
+  
+  if (isBW) filters += " grayscale(100%)";
+  if (isInverted) filters += " invert(100%)";
+  
+  // Adicionar filtro extra se existir
+  if (filterPresets[activeFilter] && filterPresets[activeFilter].extra) {
+    filters += " " + filterPresets[activeFilter].extra;
+  }
+  
+  outputCtx.filter = filters;
+
+  const baseScale = Math.max(500 / img.width, 500 / img.height);
+  const finalScale = baseScale * zoom * scaleFactor;
+  const drawWidth = img.width * finalScale;
+  const drawHeight = img.height * finalScale;
+
+  const centerX = outputSize / 2 - drawWidth / 2 + offsetX * scaleFactor;
+  const centerY = outputSize / 2 - drawHeight / 2 + offsetY * scaleFactor;
+
+  outputCtx.drawImage(img, centerX, centerY, drawWidth, drawHeight);
+  
+  // Aplicar nitidez também no download
+  if (sharpen > 0) {
+    const imageData = outputCtx.getImageData(0, 0, outputSize, outputSize);
+    const sharpenedData = applySharpenToImageData(imageData, sharpen);
+    outputCtx.putImageData(sharpenedData, 0, 0);
+  }
+
+  outputCtx.restore();
+
+  outputCanvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pixelcraft-${outputSize}x${outputSize}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png', 0.95);
+}
+
+function applySharpenToImageData(imageData, intensity) {
+  const data = imageData.data;
+  const width = imageData.width;
+  const height = imageData.height;
+  const originalData = new Uint8ClampedArray(data);
+  const factor = intensity / 100;
+  
+  const kernel = [
+    [-1, -1, -1],
+    [-1,  9, -1],
+    [-1, -1, -1]
+  ];
+  
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      let r = 0, g = 0, b = 0;
+      
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          const pixelIndex = ((y + ky) * width + (x + kx)) * 4;
+          const kernelValue = kernel[ky + 1][kx + 1];
+          
+          r += originalData[pixelIndex] * kernelValue;
+          g += originalData[pixelIndex + 1] * kernelValue;
+          b += originalData[pixelIndex + 2] * kernelValue;
+        }
+      }
+      
+      const pixelIndex = (y * width + x) * 4;
+      
+      data[pixelIndex] = clamp(
+        originalData[pixelIndex] * (1 - factor) + r * factor
+      );
+      data[pixelIndex + 1] = clamp(
+        originalData[pixelIndex + 1] * (1 - factor) + g * factor
+      );
+      data[pixelIndex + 2] = clamp(
+        originalData[pixelIndex + 2] * (1 - factor) + b * factor
+      );
+    }
+  }
+  
+  return imageData;
+}
